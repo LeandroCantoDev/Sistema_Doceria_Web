@@ -1,0 +1,28 @@
+<h1> Produtos Cadastrados </h1>
+<ul>
+    {% for produto in produtos %}
+        <li>{{ produto.name }} - R$ {{ produto.price }}</li>
+        {% endfor %}
+</ul>
+<form method='POST'>
+    {% csrf_token %}
+    <input type="text" name="name" placeholder="Nome do produto">
+    <input type="number" step="0.01" name="price" placeholder="Preço">
+    <button type="submit">Cadastrar</button>
+</form>
+
+<h1> Clientes Cadastrados </h1>
+<ul>
+    {% for cliente in clientes %}
+        <li>{{ cliente.name }}</li>
+    {% endfor %}
+</ul>
+<form method="POST">
+    {% csrf_token %}
+    <input type="text" name="name" placeholder="Nome do cliente">
+    <button type="submit">Cadastrar</button>
+</form>
+
+
+<a href="{% url 'criar_pedido' %}">Novo Pedido</a>
+

@@ -1,0 +1,10 @@
+<h1> Novo Pedido </h1>
+<form method="POST">
+    {% csrf_token %}
+    <select name="cliente_id">
+    {% for cliente in clientes %}
+        <option value="{{ cliente.id }}">{{ cliente.name }}</option>
+    {% endfor %}
+    </select>
+    <button type="submit">Iniciar Pedido</button>
+</form>
