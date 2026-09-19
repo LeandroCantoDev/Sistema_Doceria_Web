@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .models import Produto, Cliente, Pedido
+from .models import Produto, Cliente, Pedido, ItemPedido
 
 
 def home(request):
@@ -43,3 +43,40 @@ def adicionar_item(request):
     'itens': itens,
     'itens_detalhados': itens_detalhados
     })
+
+def finalizar_pedido(request):
+    if request.method == 'GET':
+        cliente_encontrado = Cliente.objects.get(id=request.session['cliente_id'])
+        if 'itens' not in request.session:
+            request.session['itens'] = []
+        itens = request.session['itens']
+        itens_detalhados = []
+        total = 0
+        for item in itens:
+            produto_encontrado = Produto.objects.get(id = item['produto_id'])
+            subtotal = produto_encontrado.price * item['quantidade']
+            itens_detalhados.append({'produto': produto_encontrado, 'quantidade':item['quantidade'], 'subtotal': subtotal})
+            total += subtotal
+    if request.method == 'POST':
+        cliente_encontrado = Cliente.objects.get(id=request.session['cliente_id'])
+        if request.POST['boleto'].startswith('S'):
+            boleto_valor = True
+        else:
+            boleto_valor = False
+        pedido_criado = Pedido.objects.create(client = cliente_encontrado, boleto = boleto_valor)
+        for item in request.session['itens']:
+            produto_buscado = Produto.objects.get(id=item['produto_id'])
+            ItemPedido.objects.create(pedido=pedido_criado, produto=produto_buscado, quantity=item['quantidade'])
+        del request.session['cliente_id']
+        del request.session['itens']
+        return redirect('home')
+
+
+    return render(
+        request, 
+        'pedidos/finalizar_pedido.html', 
+        {
+         'itens_detalhados': itens_detalhados, 
+         'cliente':cliente_encontrado, 
+         'total': total,
+         })

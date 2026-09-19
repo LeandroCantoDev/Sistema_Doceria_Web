@@ -1,0 +1,17 @@
+<h1> Finalizar Pedido </h1>
+<form method="POST">
+    {% csrf_token %}
+    {% for item in itens_detalhados %}
+        <li> {{ item.produto.name }}</li>
+        <li> {{ item.quantidade }}</li>
+        <li> {{ item.subtotal }}</li>
+    {% endfor %}
+    <li> {{ total }}</li>
+<h1> Fazer Boleto? </h1>
+<select name="boleto">
+        <option value="SIM"> SIM </option> 
+        <option value="NÃO"> NÃO </option>
+</select>
+    <button type="submit">Enviar</button>
+
+</form>
