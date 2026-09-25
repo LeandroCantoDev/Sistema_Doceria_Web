@@ -1,0 +1,20 @@
+{% extends 'pedidos/base.html' %}
+{% block content %}
+
+<h1>Editar Cliente</h1>
+<p style="color: #666; margin-top: -10px; margin-bottom: 20px;">Altere os dados do cliente cadastrado:</p>
+
+<form method="POST" style="flex-direction: column; align-items: stretch; gap: 12px;">
+    {% csrf_token %}
+    <div>
+        <label style="display: block; font-weight: bold; margin-bottom: 4px; color: var(--marrom-cafe);">Nome do Cliente:</label>
+        <input type="text" name="name" value="{{ cliente.name }}" style="width: 100%; box-sizing: border-box;" required>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <a href="{% url 'home' %}" class="btn btn-secondary" style="flex: 1; justify-content: center;">Cancelar</a>
+        <button type="submit" class="btn-success" style="flex: 2; justify-content: center;">✓ Salvar Alterações</button>
+    </div>
+</form>
+
+{% endblock %}

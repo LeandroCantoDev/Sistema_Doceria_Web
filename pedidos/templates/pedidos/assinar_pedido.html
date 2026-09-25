@@ -1,0 +1,170 @@
+{% extends 'pedidos/base.html' %}
+{% block content %}
+
+{% if pedido.esta_assinado %}
+    <div style="background-color: #E8F5E9; border-left: 5px solid #2E7D32; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <h2 style="color: #2E7D32; margin-top: 0;">✓ Pedido Assinado e Confirmado</h2>
+        <p style="margin: 0; color: #1B5E20;">Este pedido já teve a assinatura digital coletada e validada com sucesso.</p>
+    </div>
+
+    <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 15px;">
+        <p style="margin: 5px 0;"><strong>Pedido:</strong> #{{ pedido.id }}</p>
+        <p style="margin: 5px 0;"><strong>Cliente:</strong> {{ pedido.client.name }}</p>
+        <p style="margin: 5px 0;"><strong>Data do Pedido:</strong> {{ pedido.data_criacao|date:"d/m/Y H:i" }}</p>
+    </div>
+
+    <h3 style="color: var(--marrom-cafe);">Itens do Pedido:</h3>
+    <ul>
+        {% for item in itens_detalhados %}
+            <li>
+                <span>{{ item.produto.name }} ({{ item.quantidade }}x)</span>
+                <span>R$ {{ item.subtotal|floatformat:2 }}</span>
+            </li>
+        {% endfor %}
+        <li style="font-weight: bold; background-color: #FFF3E0; border-left: 4px solid var(--laranja);">
+            <span>TOTAL:</span>
+            <span style="color: var(--laranja); font-size: 1.15em;">R$ {{ total|floatformat:2 }}</span>
+        </li>
+    </ul>
+
+    <div style="background: white; border: 2px dashed #81C784; border-radius: 8px; padding: 15px; text-align: center; margin-top: 20px;">
+        <p style="color: #2E7D32; font-weight: bold; margin-top: 0;">Assinatura Digital Registrada:</p>
+        <img src="{{ pedido.assinatura }}" style="max-width: 100%; height: auto; max-height: 160px;" alt="Assinatura do Cliente">
+    </div>
+
+    <div style="margin-top: 25px; display: flex; gap: 10px;">
+        <a href="{% url 'gerar_pdf' pedido.id %}" target="_blank" class="btn">📄 Baixar Comprovante em PDF</a>
+    </div>
+
+{% else %}
+
+    <div style="text-align: center; margin-bottom: 15px;">
+        <h2 style="color: var(--marrom-cafe); margin-bottom: 5px;">Conferência do Pedido #{{ pedido.id }}</h2>
+        <p style="color: #666; margin: 0;">Confira os itens abaixo e assine para confirmar.</p>
+    </div>
+
+    <div style="background: white; padding: 12px 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 15px;">
+        <p style="margin: 4px 0;"><strong>Cliente:</strong> {{ pedido.client.name }}</p>
+        <p style="margin: 4px 0;"><strong>Data:</strong> {{ pedido.data_criacao|date:"d/m/Y H:i" }}</p>
+    </div>
+
+    <h3 style="color: var(--marrom-cafe);">Resumo do Consumo:</h3>
+    <ul>
+        {% for item in itens_detalhados %}
+            <li>
+                <span>{{ item.produto.name }} ({{ item.quantidade }}x)</span>
+                <span>R$ {{ item.subtotal|floatformat:2 }}</span>
+            </li>
+        {% endfor %}
+        <li style="font-weight: bold; background-color: #FFF3E0; border-left: 4px solid var(--laranja);">
+            <span>TOTAL A PAGAR:</span>
+            <span style="color: var(--laranja); font-size: 1.2em;">R$ {{ total|floatformat:2 }}</span>
+        </li>
+    </ul>
+
+    <form method="POST" style="flex-direction: column; align-items: stretch;">
+        {% csrf_token %}
+        <label style="font-weight: bold; color: var(--marrom-cafe); margin-bottom: 5px;">
+            ✍️ Assine com o dedo no espaço abaixo:
+        </label>
+        
+        <div style="position: relative; width: 100%;">
+            <canvas id='assinatura' width="500" height="200" style="border: 2px dashed var(--marrom-cafe); background: white; border-radius: 8px; width: 100%; height: 180px; touch-action: none; display: block; box-sizing: border-box;"></canvas>
+            <div style="position: absolute; bottom: 30px; left: 20px; right: 20px; border-bottom: 1px dotted #ccc; pointer-events: none;"></div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 15px; width: 100%;">
+            <button type="button" onclick="limparAssinatura()" class="btn-secondary" style="background-color: #8D6E63; flex: 1; justify-content: center;">Limpar</button>
+            <button type="button" onclick="salvarAssinatura()" class="btn-success" style="flex: 2; justify-content: center; font-size: 1.05em; padding: 12px;">✓ Confirmar Assinatura</button>
+        </div>
+
+        <input type="hidden" name="assinatura_dados" id="campo_assinatura">
+    </form>
+
+    <script>
+    let canvas = document.getElementById('assinatura');
+    let ctx = canvas.getContext("2d");
+    ctx.strokeStyle = "#1A1A1A";
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    let desenhando = false;
+    let teveDesenho = false;
+
+    function getCoords(event) {
+        let rect = canvas.getBoundingClientRect();
+        let scaleX = canvas.width / rect.width;
+        let scaleY = canvas.height / rect.height;
+        let clientX = event.clientX;
+        let clientY = event.clientY;
+        if (event.touches && event.touches.length > 0) {
+            clientX = event.touches[0].clientX;
+            clientY = event.touches[0].clientY;
+        }
+        return {
+            x: (clientX - rect.left) * scaleX,
+            y: (clientY - rect.top) * scaleY
+        };
+    }
+
+    // Mouse events
+    canvas.addEventListener("mousedown", function(event){
+        desenhando = true;
+        teveDesenho = true;
+        let coords = getCoords(event);
+        ctx.beginPath();
+        ctx.moveTo(coords.x, coords.y);
+    });
+    window.addEventListener("mouseup", function(){
+        desenhando = false;
+    });
+    canvas.addEventListener("mousemove", function(event){
+        if (desenhando){
+            let coords = getCoords(event);
+            ctx.lineTo(coords.x, coords.y);
+            ctx.stroke();
+        }
+    });
+
+    // Touch events for mobile/tablets
+    canvas.addEventListener("touchstart", function(event){
+        event.preventDefault();
+        desenhando = true;
+        teveDesenho = true;
+        let coords = getCoords(event);
+        ctx.beginPath();
+        ctx.moveTo(coords.x, coords.y);
+    }, { passive: false });
+
+    canvas.addEventListener("touchend", function(event){
+        event.preventDefault();
+        desenhando = false;
+    }, { passive: false });
+
+    canvas.addEventListener("touchmove", function(event){
+        event.preventDefault();
+        if (desenhando){
+            let coords = getCoords(event);
+            ctx.lineTo(coords.x, coords.y);
+            ctx.stroke();
+        }
+    }, { passive: false });
+
+    function limparAssinatura() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        teveDesenho = false;
+    }
+
+    function salvarAssinatura() {
+        if (!teveDesenho) {
+            alert("Por favor, faça sua assinatura no quadro antes de confirmar.");
+            return;
+        }
+        let imagem_assinatura = canvas.toDataURL("image/png");
+        document.getElementById('campo_assinatura').value = imagem_assinatura;
+        document.querySelector('form').submit();
+    }
+    </script>
+{% endif %}
+
+{% endblock %}

@@ -1,28 +1,51 @@
+{% extends 'pedidos/base.html' %}
+{% block content %}
 <h1> Produtos Cadastrados </h1>
 <ul>
     {% for produto in produtos %}
-        <li>{{ produto.name }} - R$ {{ produto.price }}</li>
-        {% endfor %}
+        <li>
+            <div>
+                <strong>{{ produto.name }}</strong>
+                <span style="color: var(--laranja); font-weight: bold; margin-left: 10px;">R$ {{ produto.price|floatformat:2 }}</span>
+            </div>
+            <div style="display: flex; gap: 6px;">
+                <a href="{% url 'editar_produto' produto.id %}" class="btn-secondary" style="padding: 4px 8px; font-size: 0.85em; border-radius: 4px;" title="Editar produto">✏️</a>
+                <a href="{% url 'excluir_produto' produto.id %}" onclick="return confirm('Deseja realmente excluir o produto &quot;{{ produto.name }}&quot;?');" class="btn-danger" style="padding: 4px 8px; font-size: 0.85em; border-radius: 4px;" title="Excluir produto">🗑️</a>
+            </div>
+        </li>
+    {% empty %}
+        <li style="color: #888; justify-content: center;">Nenhum produto cadastrado ainda.</li>
+    {% endfor %}
 </ul>
 <form method='POST'>
     {% csrf_token %}
-    <input type="text" name="name" placeholder="Nome do produto">
-    <input type="number" step="0.01" name="price" placeholder="Preço">
-    <button type="submit">Cadastrar</button>
+    <input type="text" name="name" placeholder="Nome do produto" required>
+    <input type="number" step="0.01" name="price" placeholder="Preço (R$)" required>
+    <button type="submit">+ Cadastrar Produto</button>
 </form>
 
 <h1> Clientes Cadastrados </h1>
 <ul>
     {% for cliente in clientes %}
-        <li>{{ cliente.name }}</li>
+        <li>
+            <span><strong>{{ cliente.name }}</strong></span>
+            <div style="display: flex; gap: 6px;">
+                <a href="{% url 'editar_cliente' cliente.id %}" class="btn-secondary" style="padding: 4px 8px; font-size: 0.85em; border-radius: 4px;" title="Editar cliente">✏️</a>
+                <a href="{% url 'excluir_cliente' cliente.id %}" onclick="return confirm('Deseja realmente excluir o cliente &quot;{{ cliente.name }}&quot;?\n\nAtenção: pedidos vinculados a este cliente também serão removidos.');" class="btn-danger" style="padding: 4px 8px; font-size: 0.85em; border-radius: 4px;" title="Excluir cliente">🗑️</a>
+            </div>
+        </li>
+    {% empty %}
+        <li style="color: #888; justify-content: center;">Nenhum cliente cadastrado ainda.</li>
     {% endfor %}
 </ul>
 <form method="POST">
     {% csrf_token %}
-    <input type="text" name="name" placeholder="Nome do cliente">
-    <button type="submit">Cadastrar</button>
+    <input type="text" name="name" placeholder="Nome do cliente" required>
+    <button type="submit">+ Cadastrar Cliente</button>
 </form>
 
-
-<a href="{% url 'criar_pedido' %}">Novo Pedido</a>
-
+<div style="display: flex; gap: 10px; margin-top: 20px;">
+    <a href="{% url 'criar_pedido' %}" class="btn">+ Novo Pedido</a>
+    <a href="{% url 'ultimos_pedidos' %}" class="btn btn-secondary">📋 Últimos Pedidos</a>
+</div>
+{% endblock %}

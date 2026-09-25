@@ -1,0 +1,66 @@
+{% extends 'pedidos/base.html' %}
+{% block content %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h1 style="margin: 0;">Últimos Pedidos</h1>
+    <a href="{% url 'criar_pedido' %}" class="btn">+ Novo Pedido</a>
+</div>
+
+<form method="GET" action="{% url 'ultimos_pedidos' %}" style="margin-bottom: 15px; padding: 10px 14px; display: flex; gap: 8px; align-items: center;">
+    <input type="text" name="busca" value="{{ busca }}" placeholder="Buscar por nome do cliente..." style="flex: 1; margin-bottom: 0;">
+    <button type="submit" style="white-space: nowrap;">🔍 Buscar</button>
+    {% if busca %}
+        <a href="{% url 'ultimos_pedidos' %}" class="btn btn-secondary" style="white-space: nowrap;">✕ Limpar</a>
+    {% endif %}
+</form>
+
+{% if busca %}
+    <p style="margin: -5px 0 15px 5px; color: #666; font-size: 0.9em;">
+        Resultados da busca para: <strong>"{{ busca }}"</strong>
+    </p>
+{% endif %}
+
+<ul>
+{% for pedido in pedidos %}
+    <li class="pedido-card">
+        <div class="pedido-top">
+            <span class="pedido-cliente">#{{ pedido.id }} - {{ pedido.client.name }}</span>
+            <span class="pedido-total">R$ {{ pedido.total|floatformat:2 }}</span>
+        </div>
+        <div class="pedido-meta">
+            <span>📅 {{ pedido.data_criacao|date:"d/m/Y H:i" }}</span>
+            {% if pedido.boleto %}
+                <span class="badge badge-boleto">Com boleto</span>
+            {% else %}
+                <span class="badge badge-sem-boleto">Sem boleto</span>
+            {% endif %}
+            {% if pedido.esta_assinado %}
+                <span class="badge badge-assinado">✓ Assinado</span>
+            {% else %}
+                <span class="badge badge-pendente">⏳ Pendente</span>
+            {% endif %}
+        </div>
+        <div class="pedido-acoes">
+            <a href="{% url 'gerar_pdf' pedido.id %}" target="_blank" class="btn">📄 Baixar PDF</a>
+            <a href="{% url 'pedido_pronto' pedido.id %}" class="btn btn-secondary">📱 Ver / WhatsApp</a>
+            {% if not pedido.esta_assinado %}
+                <a href="{% url 'assinar_pedido' pedido.id %}" class="btn btn-success">✍️ Assinar</a>
+            {% endif %}
+            <a href="{% url 'excluir_pedido' pedido.id %}" onclick="return confirm('Deseja realmente excluir o Pedido #{{ pedido.id }} de {{ pedido.client.name }}?');" class="btn-danger" style="margin-left: auto;" title="Excluir pedido">🗑️ Excluir</a>
+        </div>
+    </li>
+{% empty %}
+    {% if busca %}
+        <li style="justify-content: center; color: #888; padding: 20px;">Nenhum pedido encontrado para "{{ busca }}".</li>
+    {% else %}
+        <li style="justify-content: center; color: #888; padding: 20px;">Nenhum pedido cadastrado ainda.</li>
+    {% endif %}
+{% endfor %}
+</ul>
+
+<div style="margin-top: 20px; display: flex; gap: 10px;">
+    <a href="{% url 'home' %}" class="btn btn-secondary">← Voltar ao Início</a>
+    <a href="{% url 'criar_pedido' %}" class="btn">+ Novo Pedido</a>
+</div>
+
+{% endblock %}

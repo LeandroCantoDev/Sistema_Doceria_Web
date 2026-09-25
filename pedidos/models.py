@@ -15,10 +15,22 @@ class Cliente(models.Model):
 class Pedido(models.Model):
     client = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     boleto = models.BooleanField()
+    assinatura = models.TextField(blank=True, null=True)
+    data_criacao = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return f'Pedido de {self.client}'
+
+    @property
+    def total(self):
+        return sum(item.produto.price * item.quantity for item in self.itempedido_set.all())
+
+    @property
+    def esta_assinado(self):
+        return bool(self.assinatura)
 
 class ItemPedido(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
     quantity = models.IntegerField()
+
+

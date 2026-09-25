@@ -1,3 +1,6 @@
+{% extends 'pedidos/base.html' %}
+{% block content %}
+
 <h1> Novo Pedido </h1>
 <form method="POST">
     {% csrf_token %}
@@ -8,3 +11,4 @@
     </select>
     <button type="submit">Iniciar Pedido</button>
 </form>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'pedidos/base.html' %}
+{% block content %}
+
+
+<h1> Resumo do Pedido #{{ pedido.id }} </h1>
+<ul>
+    <li> <span>Cliente:</span> <strong>{{ pedido.client.name }}</strong></li>
+    <li> <span>Data:</span> <strong>{{ pedido.data_criacao|date:"d/m/Y H:i" }}</strong></li>
+    <li> <span>Pagamento:</span> <strong>{% if pedido.boleto %}Com boleto{% else %}Sem boleto{% endif %}</strong></li>
+    {% for item in itens_detalhados %}
+        <li> 
+            <span>{{ item.produto.name }} ({{ item.quantidade }}x)</span>
+            <span>R$ {{ item.subtotal|floatformat:2 }}</span>
+        </li>
+    {% endfor %}
+    <li style="font-weight: bold; background-color: #FFF3E0;"> 
+        <span>TOTAL:</span>
+        <span style="color: var(--laranja);">R$ {{ total|floatformat:2 }}</span>
+    </li>
+</ul>
+
+{% if pedido.assinatura %}
+<div style="margin-top: 20px; text-align: center;">
+    <p><strong>Assinatura do Cliente:</strong></p>
+    <img src="{{ pedido.assinatura }}" width="250" style="border-bottom: 1px solid #333;" alt="Assinatura">
+</div>
+{% endif %}
+{% endblock %}

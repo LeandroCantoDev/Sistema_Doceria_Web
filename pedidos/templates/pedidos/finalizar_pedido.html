@@ -1,17 +1,29 @@
+{% extends 'pedidos/base.html' %}
+{% block content %}
+
 <h1> Finalizar Pedido </h1>
+<ul>
+{% for item in itens_detalhados %}
+    <li> 
+        <span> {{ item.produto.name }}</span>
+        <span> {{ item.quantidade }} x R$ {{ item.produto.price|floatformat:2 }} =</span>
+        <span> <strong>R$ {{ item.subtotal|floatformat:2 }}</strong></span>
+    </li>
+{% endfor %}
+    <li style="font-weight: bold; background-color: #FFF3E0;">
+        <span>TOTAL DO PEDIDO:</span>
+        <span style="color: var(--laranja); font-size: 1.1em;">R$ {{ total|floatformat:2 }}</span>
+    </li>
+</ul>
+<h3 style="color: var(--marrom-cafe);">Fazer Boleto?</h3>
 <form method="POST">
     {% csrf_token %}
-    {% for item in itens_detalhados %}
-        <li> {{ item.produto.name }}</li>
-        <li> {{ item.quantidade }}</li>
-        <li> {{ item.subtotal }}</li>
-    {% endfor %}
-    <li> {{ total }}</li>
-<h1> Fazer Boleto? </h1>
 <select name="boleto">
         <option value="SIM"> SIM </option> 
         <option value="NÃO"> NÃO </option>
 </select>
-    <button type="submit">Enviar</button>
-
+        <button type="submit">Finalizar Pedido</button>
 </form>
+
+
+{% endblock %}

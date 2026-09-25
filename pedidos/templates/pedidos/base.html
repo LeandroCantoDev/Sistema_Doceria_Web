@@ -1,0 +1,219 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
+    <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doce Sabor</title>
+    <style>
+    :root {
+    --marrom-cafe: #3E2723;
+    --creme: #FFF8F0;
+    --laranja: #D97B29;
+    }
+    body {
+    background-color: var(--creme);
+    font-family: Arial, sans-serif;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    
+}
+
+h1 {
+    color: var(--marrom-cafe);
+}
+
+    button, .btn, a.btn {
+        background-color: var(--laranja);
+        color: white;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.9em;
+        font-weight: 500;
+        transition: background-color 0.2s, transform 0.1s;
+    }
+
+    button:hover, .btn:hover, a.btn:hover {
+        background-color: #B8611F;
+    }
+
+    .btn-secondary, a.btn-secondary {
+        background-color: #5D4037;
+    }
+
+    .btn-secondary:hover, a.btn-secondary:hover {
+        background-color: #3E2723;
+    }
+
+    .btn-success, a.btn-success {
+        background-color: #2E7D32;
+    }
+
+    .btn-success:hover, a.btn-success:hover {
+        background-color: #1B5E20;
+    }
+
+    .btn-danger, a.btn-danger {
+        background-color: #C62828;
+        color: white;
+    }
+
+    .btn-danger:hover, a.btn-danger:hover {
+        background-color: #B71C1C;
+    }
+
+    a {
+        color: var(--laranja);
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+    input, select {
+        padding: 8px;
+        border: 1px solid var(--marrom-cafe);
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+
+    header {
+        background-color: var(--marrom-cafe);
+        color: var(--creme);
+        padding: 15px;
+        text-align: center;
+        margin-bottom: 20px;
+        border-radius: 8px;
+    }
+
+    header h1 {
+        font-family: 'Dancing Script', cursive;
+        font-size: 2.5em;
+        margin: 0;
+        color: var(--creme);
+    }
+
+    ul {
+        padding: 0;
+        margin: 0 0 20px 0;
+    }
+
+    li {
+        list-style: none;
+        background-color: white;
+        padding: 12px 15px;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    form {
+        background-color: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        font-size: 0.78em;
+        font-weight: 600;
+        border-radius: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .badge-assinado {
+        background-color: #E8F5E9;
+        color: #2E7D32;
+    }
+
+    .badge-pendente {
+        background-color: #FFF3E0;
+        color: #E65100;
+    }
+
+    .badge-boleto {
+        background-color: #E3F2FD;
+        color: #1565C0;
+    }
+
+    .badge-sem-boleto {
+        background-color: #ECEFF1;
+        color: #546E7A;
+    }
+
+    .pedido-card {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+        padding: 14px;
+        margin-bottom: 12px;
+    }
+
+    .pedido-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .pedido-cliente {
+        font-size: 1.05em;
+        font-weight: bold;
+        color: var(--marrom-cafe);
+    }
+
+    .pedido-total {
+        font-size: 1.1em;
+        font-weight: bold;
+        color: var(--laranja);
+    }
+
+    .pedido-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85em;
+        color: #666;
+    }
+
+    .pedido-acoes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 6px;
+        padding-top: 8px;
+        border-top: 1px solid #f0e8e0;
+    }
+</style>
+</head>
+
+<body>
+    <header>
+        <a href="{% url 'home' %}" style="display: inline-block;" title="Doce Sabor - Início">
+            <img src="{% static 'pedidos/img/logo.png' %}" alt="Doce Sabor" style="max-height: 110px; width: auto; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.25); vertical-align: middle;">
+        </a>
+    </header>
+    {% block content %}
+    {% endblock %}
+</body>
+</html>

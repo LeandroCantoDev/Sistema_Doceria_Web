@@ -1,0 +1,20 @@
+{% extends 'pedidos/base.html' %}
+{% block content %}
+
+<h1>Pedido #{{ pedido_encontrado.id }} Criado com Sucesso!</h1>
+<p>Cliente: <strong>{{ pedido_encontrado.client.name }}</strong></p>
+<p>Total do Pedido: <strong style="color: var(--laranja);">R$ {{ pedido_encontrado.total|floatformat:2 }}</strong></p>
+
+<div style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0;">
+    <a href="{{ link_whats }}" target="_blank" class="btn" style="background-color: #25D366; justify-content: center;">📱 Enviar Link de Assinatura via WhatsApp</a>
+    <a href="{% url 'gerar_pdf' pedido_encontrado.id %}" target="_blank" class="btn" style="justify-content: center;">📄 Baixar PDF do Pedido</a>
+    <a href="{% url 'assinar_pedido' pedido_encontrado.id %}" class="btn btn-secondary" style="justify-content: center;">✍️ Assinar Agora Neste Aparelho</a>
+</div>
+
+<div style="margin-top: 25px; display: flex; gap: 10px;">
+    <a href="{% url 'home' %}" class="btn btn-secondary">← Início</a>
+    <a href="{% url 'ultimos_pedidos' %}" class="btn btn-secondary">📋 Últimos Pedidos</a>
+    <a href="{% url 'criar_pedido' %}" class="btn">+ Novo Pedido</a>
+</div>
+
+{% endblock %}

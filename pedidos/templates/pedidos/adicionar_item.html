@@ -1,17 +1,49 @@
-<h1> Adicionar Item </h1>
+{% extends 'pedidos/base.html' %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+    <h1 style="margin: 0;">Lançar Itens do Pedido</h1>
+</div>
+
 <form method='POST'>
     {% csrf_token %}
-    <select name = 'produto_id'>
+    <select name='produto_id' style="flex: 2; min-width: 180px;">
         {% for produto in produtos %}
-            <option value="{{produto.id}} "> {{ produto.name }} {{ produto.price}}</option>
+            <option value="{{ produto.id }}"> {{ produto.name }} - R$ {{ produto.price|floatformat:2 }}</option>
         {% endfor %}
     </select>
-        <input type="number" name="quantidade" placeholder="Quantidade">
-        <button type="submit">Adicionar</button>
+    <input type="number" name="quantidade" min="1" value="1" placeholder="Qtd" style="width: 70px;" required>
+    <button type="submit">+ Adicionar</button>
 </form>
+
+<h3 style="color: var(--marrom-cafe); margin-top: 20px;">Itens no Pedido:</h3>
 <ul>
     {% for item in itens_detalhados %}
-        <li>{{item.produto.name}} - {{ item.quantidade }}</li>
+        <li>
+            <div>
+                <strong>{{ item.produto.name }}</strong>
+                <span style="color: #666; font-size: 0.9em; margin-left: 6px;">({{ item.quantidade }}x R$ {{ item.produto.price|floatformat:2 }})</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-weight: bold; color: var(--laranja);">R$ {{ item.subtotal|floatformat:2 }}</span>
+                <a href="{% url 'remover_item' item.index %}" class="btn-danger" style="padding: 4px 8px; font-size: 0.85em; border-radius: 4px;" title="Remover item">🗑️</a>
+            </div>
+        </li>
+    {% empty %}
+        <li style="color: #888; justify-content: center;">Nenhum item adicionado ainda.</li>
     {% endfor %}
+
+    {% if itens_detalhados %}
+        <li style="font-weight: bold; background-color: #FFF3E0; border-left: 4px solid var(--laranja);">
+            <span>Subtotal Parcial:</span>
+            <span style="color: var(--laranja); font-size: 1.1em;">R$ {{ total_parcial|floatformat:2 }}</span>
+        </li>
+    {% endif %}
 </ul>
-<a href="{% url 'finalizar_pedido' %}">Finalizar Pedido</a>
+
+<div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+    <a href="{% url 'home' %}" class="btn btn-secondary">← Cancelar</a>
+    {% if itens_detalhados %}
+        <a href="{% url 'finalizar_pedido' %}" class="btn">Avançar para Finalizar Pedido →</a>
+    {% endif %}
+</div>
+{% endblock %}

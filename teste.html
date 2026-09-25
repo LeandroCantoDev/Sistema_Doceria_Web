@@ -1,4 +1,53 @@
+<canvas id='assinatura' width="400" height="200" style="border: 1px solid black;"></canvas>;
 <script>
-    let nome = "Leandro";
-    alert(nome)
+let canvas = document.getElementById('assinatura');
+let ctx = canvas.getContext("2d");
+let desenhando = false;
+
+canvas.addEventListener("mousedown", function(event){
+    desenhando = true;
+    ctx.moveTo(event.offsetX, event.offsetY);
+    ctx.beginPath();
+});
+canvas.addEventListener("mouseup", function(){
+    desenhando = false;
+});
+canvas.addEventListener("mousemove", function(event){
+    if (desenhando){
+        ctx.lineTo(event.offsetX, event.offsetY);
+        ctx.stroke();
+    }
+});
+
+
+canvas.addEventListener("touchstart", function(event){
+    let toque = event.touches[0];
+    let x = toque.clientX - canvas.getBoundingClientRect().left;
+    let y = toque.clientY - canvas.getBoundingClientRect().top;
+    desenhando = true;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+});
+canvas.addEventListener("touchend", function(){
+    desenhando = false;
+})
+canvas.addEventListener("touchmove", function(event){
+    if(desenhando){
+        let toque = event.touches[0];
+        let x = toque.clientX - canvas.getBoundingClientRect().left;
+        let y = toque.clientY - canvas.getBoundingClientRect().top;
+        ctx.lineTo(x, y);
+        ctx.stroke();
+    }
+})
+
+function salvarAssinatura() {
+let imagem_assinatura = canvas.toDataURL();
+document.getElementById('campo_assinatura').value = imagem_assinatura;
+document.querySelector('form').submit();
+}
 </script>
+<form method="post">
+    <input type="hidden" name="assinatura_dados" id="campo_assinatura">
+    <button type="button" onclick="salvarAssinatura()">Confirmar Assinatura</button>
+</form>

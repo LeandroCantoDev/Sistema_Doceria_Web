@@ -1,0 +1,7 @@
+Django>=5.0,<7.0
+xhtml2pdf>=0.2.15
+reportlab>=4.0
+Pillow>=10.0
+tzdata
+gunicorn>=21.0.0
+whitenoise>=6.6.0
