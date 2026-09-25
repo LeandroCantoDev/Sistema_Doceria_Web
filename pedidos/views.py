@@ -143,7 +143,6 @@ def assinar_pedido(request, pedido_id):
         total += subtotal
 
     if request.method == 'POST':
-        # Proteção: não permitir sobrescrever uma assinatura já confirmada
         if not pedido_encontrado.assinatura and 'assinatura_dados' in request.POST:
             pedido_encontrado.assinatura = request.POST['assinatura_dados']
             pedido_encontrado.save()
