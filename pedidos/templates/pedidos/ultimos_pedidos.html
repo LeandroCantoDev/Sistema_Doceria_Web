@@ -29,11 +29,7 @@
         </div>
         <div class="pedido-meta">
             <span>📅 {{ pedido.data_criacao|date:"d/m/Y H:i" }}</span>
-            {% if pedido.boleto %}
-                <span class="badge badge-boleto">Com boleto</span>
-            {% else %}
-                <span class="badge badge-sem-boleto">Sem boleto</span>
-            {% endif %}
+            <span class="...">{{ pedido.forma_pagamento }}</span>
             {% if pedido.esta_assinado %}
                 <span class="badge badge-assinado">✓ Assinado</span>
             {% else %}
