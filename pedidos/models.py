@@ -14,7 +14,7 @@ class Cliente(models.Model):
 
 class Pedido(models.Model):
     client = models.ForeignKey(Cliente, on_delete=models.CASCADE)
-    boleto = models.BooleanField()
+    forma_pagamento = models.CharField(max_length= 30, default='PIX')
     assinatura = models.TextField(blank=True, null=True)
     data_criacao = models.DateTimeField(auto_now_add=True)
     def __str__(self):

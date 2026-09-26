@@ -108,16 +108,19 @@ def finalizar_pedido(request):
             total += subtotal
     if request.method == 'POST':
         cliente_encontrado = Cliente.objects.get(id=request.session['cliente_id'])
-        if request.POST['boleto'].startswith('S'):
-            boleto_valor = True
-        else:
-            boleto_valor = False
-        pedido_criado = Pedido.objects.create(client = cliente_encontrado, boleto = boleto_valor)
+        metodo_selecionado = request.POST.get('forma_pagamento', 'PIX')
+        pedido_criado = Pedido.objects.create(
+            client=cliente_encontrado, 
+            forma_pagamento=metodo_selecionado 
+        )
+        
         for item in request.session['itens']:
             produto_buscado = Produto.objects.get(id=item['produto_id'])
             ItemPedido.objects.create(pedido=pedido_criado, produto=produto_buscado, quantity=item['quantidade'])
+            
         del request.session['cliente_id']
         del request.session['itens']
+        return redirect('pedido_pronto', pedido_id=pedido_criado.id)
         return redirect('pedido_pronto', pedido_id=pedido_criado.id)
 
 

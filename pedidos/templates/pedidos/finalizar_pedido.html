@@ -15,12 +15,14 @@
         <span style="color: var(--laranja); font-size: 1.1em;">R$ {{ total|floatformat:2 }}</span>
     </li>
 </ul>
-<h3 style="color: var(--marrom-cafe);">Fazer Boleto?</h3>
+<h3 style="color: var(--marrom-cafe);">Forma de Pagamento</h3>
 <form method="POST">
     {% csrf_token %}
-<select name="boleto">
-        <option value="SIM"> SIM </option> 
-        <option value="NÃO"> NÃO </option>
+<select name="forma_pagamento">
+        <option value="PIX"> PIX </option> 
+        <option value="BOLETO"> BOLETO </option>
+        <option value="DINHEIRO"> DINHEIRO </option>
+        <option value="CONSIGNADO"> CONSIGNADO </option>
 </select>
         <button type="submit">Finalizar Pedido</button>
 </form>
