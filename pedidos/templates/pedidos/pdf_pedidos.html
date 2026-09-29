@@ -1,22 +1,76 @@
 {% extends 'pedidos/base.html' %}
 {% block content %}
 
+<style>
+    /* Configuração específica para impressora térmica (Bobina de 58mm) */
+    @page {
+        size: 58mm auto; /* Força a largura para formato de cupom */
+        margin: 2mm; /* Remove as margens brancas gigantes */
+    }
+    
+    .cupom-container {
+        font-family: Arial, sans-serif;
+        font-size: 16px; /* Letra muito maior */
+        color: #000;
+        width: 100%;
+        max-width: 58mm;
+        margin: 0 auto;
+    }
+    
+    .cupom-titulo {
+        font-size: 18px;
+        text-align: center;
+        margin-bottom: 10px;
+        font-weight: bold;
+    }
+    
+    .cupom-lista {
+        list-style-type: none; /* Remove as bolinhas da lista */
+        padding: 0;
+        margin: 0;
+    }
+    
+    .cupom-lista li {
+        margin-bottom: 6px;
+        line-height: 1.3;
+    }
+    
+    .linha-divisoria {
+        border-bottom: 1px dashed #000;
+        margin: 8px 0;
+    }
+    
+    .cupom-total {
+        font-size: 18px;
+        font-weight: bold;
+        text-align: right;
+        margin-top: 10px;
+        padding-top: 5px;
+        border-top: 1px dashed #000;
+    }
+</style>
 
-<h1> Resumo do Pedido #{{ pedido.id }} </h1>
-<ul>
-    <li> <span>Cliente:</span> <strong>{{ pedido.client.name }}</strong></li>
-    <li> <span>Data:</span> <strong>{{ pedido.data_criacao|date:"d/m/Y H:i" }}</strong></li>
-    <li> <span>Pagamento:</span> <strong>{{ pedido.forma_pagamento }}</strong></li>
-    {% for item in itens_detalhados %}
-        <li> 
-            <span>{{ item.produto.name }} ({{ item.quantidade }}x)</span>
-            <span>R$ {{ item.subtotal|floatformat:2 }}</span>
-        </li>
-    {% endfor %}
-    <li style="font-weight: bold; background-color: #FFF3E0;"> 
-        <span>TOTAL:</span>
-        <span style="color: var(--laranja);">R$ {{ total|floatformat:2 }}</span>
-    </li>
-</ul>
+<div class="cupom-container">
+    <div class="cupom-titulo">Pedido #{{ pedido.id }}</div>
+    
+    <ul class="cupom-lista">
+        <li><strong>Cliente:</strong> {{ pedido.client.name }}</li>
+        <li><strong>Data:</strong> {{ pedido.data_criacao|date:"d/m/Y H:i" }}</li>
+        <li><strong>Pagamento:</strong> {{ pedido.forma_pagamento }}</li>
+        
+        <li class="linha-divisoria"></li>
+        
+        {% for item in itens_detalhados %}
+            <li> 
+                {{ item.produto.name }} ({{ item.quantidade }}x)<br>
+                <strong>R$ {{ item.subtotal|floatformat:2 }}</strong>
+            </li>
+        {% endfor %}
+    </ul>
+    
+    <div class="cupom-total"> 
+        TOTAL: R$ {{ total|floatformat:2 }}
+    </div>
+</div>
 
 {% endblock %}
