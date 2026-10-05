@@ -6,13 +6,25 @@
     <a href="{% url 'criar_pedido' %}" class="btn">+ Novo Pedido</a>
 </div>
 
-<form method="GET" action="{% url 'ultimos_pedidos' %}" style="margin-bottom: 15px; padding: 10px 14px; display: flex; gap: 8px; align-items: center;">
+<form method="GET" action="{% url 'ultimos_pedidos' %}" style="margin-bottom: 12px; padding: 10px 14px; display: flex; gap: 8px; align-items: center;">
     <input type="text" name="busca" value="{{ busca }}" placeholder="Buscar por nome do cliente..." style="flex: 1; margin-bottom: 0;">
+    <input type="hidden" name="pagamento" value="{{ pagamento }}">
     <button type="submit" style="white-space: nowrap;">🔍 Buscar</button>
     {% if busca %}
-        <a href="{% url 'ultimos_pedidos' %}" class="btn btn-secondary" style="white-space: nowrap;">✕ Limpar</a>
+        <a href="?pagamento={{ pagamento }}" class="btn btn-secondary" style="white-space: nowrap;">✕ Limpar</a>
     {% endif %}
 </form>
+
+<!-- Barra de Filtros de Pagamento -->
+<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; align-items: center;">
+    <span style="font-weight: bold; font-size: 0.85em; color: var(--marrom-cafe);">Filtrar Pagamento:</span>
+    <a href="?busca={{ busca }}&pagamento=TODOS" class="btn" style="padding: 5px 11px; font-size: 0.85em; {% if pagamento == 'TODOS' or not pagamento %}background-color: var(--laranja);{% else %}background-color: #8D6E63;{% endif %}">Todos</a>
+    <a href="?busca={{ busca }}&pagamento=DINHEIRO" class="btn" style="padding: 5px 11px; font-size: 0.85em; {% if pagamento == 'DINHEIRO' %}background-color: var(--laranja);{% else %}background-color: #8D6E63;{% endif %}">💵 Dinheiro</a>
+    <a href="?busca={{ busca }}&pagamento=CONSIGNADO" class="btn" style="padding: 5px 11px; font-size: 0.85em; {% if pagamento == 'CONSIGNADO' %}background-color: var(--laranja);{% else %}background-color: #8D6E63;{% endif %}">📋 Consignado</a>
+    <a href="?busca={{ busca }}&pagamento=PIX" class="btn" style="padding: 5px 11px; font-size: 0.85em; {% if pagamento == 'PIX' %}background-color: var(--laranja);{% else %}background-color: #8D6E63;{% endif %}">⚡ Pix</a>
+    <a href="?busca={{ busca }}&pagamento=BOLETO" class="btn" style="padding: 5px 11px; font-size: 0.85em; {% if pagamento == 'BOLETO' %}background-color: var(--laranja);{% else %}background-color: #8D6E63;{% endif %}">📄 Boleto</a>
+    <a href="?busca={{ busca }}&pagamento=BOLETO_PENDENTE" class="btn" style="padding: 5px 11px; font-size: 0.85em; {% if pagamento == 'BOLETO_PENDENTE' %}background-color: #E65100; font-weight: bold;{% else %}background-color: #8D6E63;{% endif %}" title="Boletos que ainda faltam ser anexados">📎 Boleto Pendente</a>
+</div>
 
 {% if busca %}
     <p style="margin: -5px 0 15px 5px; color: #666; font-size: 0.9em;">
@@ -29,11 +41,24 @@
         </div>
         <div class="pedido-meta">
             <span>📅 {{ pedido.data_criacao|date:"d/m/Y H:i" }}</span>
-            {% if pedido.boleto %}
-                <span class="badge badge-boleto">Com boleto</span>
+            
+            {% if pedido.forma_pagamento == 'DINHEIRO' %}
+                <span class="badge" style="background-color: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7;">💵 Dinheiro</span>
+            {% elif pedido.forma_pagamento == 'CONSIGNADO' %}
+                <span class="badge" style="background-color: #EDE7F6; color: #512DA8; border: 1px solid #D1C4E9;">📋 Consignado</span>
+            {% elif pedido.forma_pagamento == 'PIX' %}
+                <span class="badge" style="background-color: #E0F2F1; color: #00796B; border: 1px solid #80CBC4;">⚡ Pix</span>
+            {% elif pedido.forma_pagamento == 'BOLETO' or pedido.boleto %}
+                <span class="badge badge-boleto">📄 Boleto</span>
+                {% if pedido.boleto_arquivo %}
+                    <span class="badge" style="background-color: #E1F5FE; color: #0277BD; border: 1px solid #81D4FA;">✓ Anexado</span>
+                {% else %}
+                    <span class="badge" style="background-color: #FFF3E0; color: #E65100; border: 1px solid #FFCC80;">⚠️ Pendente anexo</span>
+                {% endif %}
             {% else %}
                 <span class="badge badge-sem-boleto">Sem boleto</span>
             {% endif %}
+
             {% if pedido.esta_assinado %}
                 <span class="badge badge-assinado">✓ Assinado</span>
             {% else %}
@@ -43,20 +68,55 @@
         <div class="pedido-acoes">
             <a href="{% url 'gerar_pdf' pedido.id %}" target="_blank" class="btn">📄 Baixar PDF</a>
             <a href="{% url 'pedido_pronto' pedido.id %}" class="btn btn-secondary">📱 Ver / WhatsApp</a>
+
             {% if not pedido.esta_assinado %}
                 <a href="{% url 'assinar_pedido' pedido.id %}" class="btn btn-success">✍️ Assinar</a>
             {% endif %}
+
+            {% if pedido.boleto %}
+                {% if pedido.boleto_arquivo %}
+                    <a href="{{ pedido.boleto_arquivo.url }}" target="_blank" class="btn" style="background-color: #0277BD;" title="Abrir e imprimir boleto enviado pelo irmão">📄 Imprimir Boleto</a>
+                    <a href="{% url 'anexar_boleto' pedido.id %}" class="btn-secondary" style="font-size: 0.8em; padding: 6px 10px;" title="Substituir boleto">🔄 Trocar</a>
+                {% else %}
+                    <a href="{% url 'anexar_boleto' pedido.id %}" class="btn" style="background-color: #E65100;" title="Enviar o arquivo do boleto bancário">📎 Enviar Boleto</a>
+                {% endif %}
+            {% endif %}
+
+            <a href="{% url 'editar_pedido' pedido.id %}" class="btn-secondary" title="Alterar itens, data ou pagamento">✏️ Editar</a>
+
             <a href="{% url 'excluir_pedido' pedido.id %}" onclick="return confirm('Deseja realmente excluir o Pedido #{{ pedido.id }} de {{ pedido.client.name }}?');" class="btn-danger" style="margin-left: auto;" title="Excluir pedido">🗑️ Excluir</a>
         </div>
     </li>
 {% empty %}
-    {% if busca %}
-        <li style="justify-content: center; color: #888; padding: 20px;">Nenhum pedido encontrado para "{{ busca }}".</li>
+    {% if busca or pagamento != 'todos' %}
+        <li style="justify-content: center; color: #888; padding: 20px;">Nenhum pedido encontrado com os filtros selecionados.</li>
     {% else %}
         <li style="justify-content: center; color: #888; padding: 20px;">Nenhum pedido cadastrado ainda.</li>
     {% endif %}
 {% endfor %}
 </ul>
+
+<!-- Paginação com Setas de Navegação -->
+{% if pedidos.has_other_pages %}
+<div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin: 25px 0;">
+    {% if pedidos.has_previous %}
+        <a href="?page={{ pedidos.previous_page_number }}&busca={{ busca }}&pagamento={{ pagamento }}" class="btn btn-secondary">◀ Anterior</a>
+    {% else %}
+        <span class="btn btn-secondary" style="opacity: 0.4; cursor: default;">◀ Anterior</span>
+    {% endif %}
+
+    <span style="font-weight: bold; color: var(--marrom-cafe); font-size: 0.95em;">
+        Página {{ pedidos.number }} de {{ pedidos.paginator.num_pages }}
+        <small style="color: #666; font-weight: normal;">({{ pedidos.paginator.count }} pedidos)</small>
+    </span>
+
+    {% if pedidos.has_next %}
+        <a href="?page={{ pedidos.next_page_number }}&busca={{ busca }}&pagamento={{ pagamento }}" class="btn btn-secondary">Próximo ▶</a>
+    {% else %}
+        <span class="btn btn-secondary" style="opacity: 0.4; cursor: default;">Próximo ▶</span>
+    {% endif %}
+</div>
+{% endif %}
 
 <div style="margin-top: 20px; display: flex; gap: 10px;">
     <a href="{% url 'home' %}" class="btn btn-secondary">← Voltar ao Início</a>

@@ -2,6 +2,8 @@
 {% block content %}
 
 <h1> Finalizar Pedido </h1>
+<p style="margin-top: -5px; color: #555;">Cliente: <strong>{{ cliente.name }}</strong></p>
+
 <ul>
 {% for item in itens_detalhados %}
     <li> 
@@ -10,19 +12,32 @@
         <span> <strong>R$ {{ item.subtotal|floatformat:2 }}</strong></span>
     </li>
 {% endfor %}
-    <li style="font-weight: bold; background-color: #FFF3E0;">
+    <li style="font-weight: bold; background-color: #FFF3E0; border-left: 4px solid var(--laranja);">
         <span>TOTAL DO PEDIDO:</span>
-        <span style="color: var(--laranja); font-size: 1.1em;">R$ {{ total|floatformat:2 }}</span>
+        <span style="color: var(--laranja); font-size: 1.15em;">R$ {{ total|floatformat:2 }}</span>
     </li>
 </ul>
-<h3 style="color: var(--marrom-cafe);">Fazer Boleto?</h3>
-<form method="POST">
+
+<form method="POST" style="flex-direction: column; align-items: stretch; gap: 14px;">
     {% csrf_token %}
-<select name="boleto">
-        <option value="SIM"> SIM </option> 
-        <option value="NÃO"> NÃO </option>
-</select>
-        <button type="submit">Finalizar Pedido</button>
+    
+    <div>
+        <label style="display: block; font-weight: bold; color: var(--marrom-cafe); margin-bottom: 4px;">📅 Data do Pedido:</label>
+        <input type="date" name="data_pedido" value="{{ data_hoje }}" style="width: 100%; box-sizing: border-box;" required>
+        <small style="color: #666; font-size: 0.85em;">Se o pedido foi feito em uma data anterior (ex: dia 01), ajuste aqui para a data e o vencimento do boleto não ficarem errados.</small>
+    </div>
+
+    <div>
+        <label style="display: block; font-weight: bold; color: var(--marrom-cafe); margin-bottom: 4px;">💳 Forma de Pagamento:</label>
+        <select name="forma_pagamento" style="width: 100%; box-sizing: border-box; padding: 10px; font-size: 1em; border-radius: 6px; border: 1px solid #ccc;">
+            <option value="DINHEIRO"> 💵 Dinheiro </option>
+            <option value="CONSIGNADO"> 📋 Consignado </option>
+            <option value="PIX"> ⚡ Pix </option>
+            <option value="BOLETO"> 📄 Boleto </option>
+        </select>
+    </div>
+
+    <button type="submit" style="margin-top: 5px; padding: 12px; font-size: 1.05em; justify-content: center;">✓ Confirmar e Finalizar Pedido</button>
 </form>
 
 

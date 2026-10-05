@@ -1,0 +1,77 @@
+{% extends 'pedidos/base.html' %}
+{% block content %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+    <h1 style="margin: 0;">Editar Pedido #{{ pedido.id }}</h1>
+    <a href="{% url 'ultimos_pedidos' %}" class="btn btn-secondary">← Voltar</a>
+</div>
+
+<p style="color: #666; margin-top: -5px;">Cliente: <strong>{{ pedido.client.name }}</strong></p>
+
+<!-- Formulário Principal: Data e Forma de Pagamento -->
+<form method="POST" style="flex-direction: column; align-items: stretch; gap: 14px; margin-bottom: 20px;">
+    {% csrf_token %}
+    
+    <div>
+        <label style="display: block; font-weight: bold; color: var(--marrom-cafe); margin-bottom: 4px;">📅 Data de Criação do Pedido:</label>
+        <input type="datetime-local" name="data_criacao" value="{{ data_formatada }}" style="width: 100%; box-sizing: border-box;" required>
+        <small style="color: #666; font-size: 0.85em;">Você pode manter ou corrigir a data original do pedido (ex: dia 01) para o vencimento do boleto não ficar errado.</small>
+    </div>
+
+    <div>
+        <label style="display: block; font-weight: bold; color: var(--marrom-cafe); margin-bottom: 4px;">💳 Forma de Pagamento:</label>
+        <select name="forma_pagamento" style="width: 100%; box-sizing: border-box; padding: 10px; font-size: 1em; border-radius: 6px; border: 1px solid #ccc;">
+            <option value="DINHEIRO" {% if pedido.forma_pagamento == 'DINHEIRO' %}selected{% endif %}> 💵 Dinheiro </option>
+            <option value="CONSIGNADO" {% if pedido.forma_pagamento == 'CONSIGNADO' %}selected{% endif %}> 📋 Consignado </option>
+            <option value="PIX" {% if pedido.forma_pagamento == 'PIX' %}selected{% endif %}> ⚡ Pix </option>
+            <option value="BOLETO" {% if pedido.forma_pagamento == 'BOLETO' %}selected{% endif %}> 📄 Boleto </option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn-success" style="padding: 10px; justify-content: center; font-size: 1em;">💾 Salvar Data e Pagamento</button>
+</form>
+
+<h3 style="color: var(--marrom-cafe); margin-bottom: 8px;">Itens do Pedido:</h3>
+<ul>
+    {% for item_info in itens_detalhados %}
+        <li>
+            <div>
+                <strong>{{ item_info.item.produto.name }}</strong>
+                <span style="color: #666; font-size: 0.9em; margin-left: 6px;">({{ item_info.item.quantity }}x R$ {{ item_info.item.produto.price|floatformat:2 }})</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-weight: bold; color: var(--laranja);">R$ {{ item_info.subtotal|floatformat:2 }}</span>
+                <a href="{% url 'remover_item_pedido' pedido.id item_info.item.id %}" onclick="return confirm('Remover {{ item_info.item.produto.name }} deste pedido?');" class="btn-danger" style="padding: 4px 8px; font-size: 0.8em; border-radius: 4px;" title="Remover item">🗑️</a>
+            </div>
+        </li>
+    {% empty %}
+        <li style="color: #888; justify-content: center;">Nenhum item neste pedido.</li>
+    {% endfor %}
+
+    <li style="font-weight: bold; background-color: #FFF3E0; border-left: 4px solid var(--laranja);">
+        <span>TOTAL ATUAL:</span>
+        <span style="color: var(--laranja); font-size: 1.15em;">R$ {{ total|floatformat:2 }}</span>
+    </li>
+</ul>
+
+<!-- Adicionar novo item ao pedido existente -->
+<div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 25px;">
+    <h4 style="margin: 0 0 10px 0; color: var(--marrom-cafe);">+ Adicionar Item que faltou no Pedido:</h4>
+    <form method="POST" style="margin: 0; padding: 0; box-shadow: none; background: transparent; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+        {% csrf_token %}
+        <select name="novo_produto_id" style="flex: 2; min-width: 180px; margin-bottom: 0;" required>
+            <option value="">Selecione um produto...</option>
+            {% for prod in produtos %}
+                <option value="{{ prod.id }}">{{ prod.name }} - R$ {{ prod.price|floatformat:2 }}</option>
+            {% endfor %}
+        </select>
+        <input type="number" name="nova_quantidade" min="1" value="1" placeholder="Qtd" style="width: 70px; margin-bottom: 0;" required>
+        <button type="submit" class="btn">+ Inserir Item</button>
+    </form>
+</div>
+
+<div style="display: flex; gap: 10px;">
+    <a href="{% url 'ultimos_pedidos' %}" class="btn" style="flex: 1; justify-content: center; padding: 12px; font-size: 1.05em;">✓ Concluir Edição e Voltar aos Últimos Pedidos</a>
+</div>
+
+{% endblock %}

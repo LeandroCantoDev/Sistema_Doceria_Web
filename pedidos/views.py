@@ -1,3 +1,7 @@
+from datetime import datetime
+from django.utils import timezone
+from django.core.paginator import Paginator
+from django.db.models import Q
 from xhtml2pdf import pisa
 from django.template.loader import get_template
 from django.http import HttpResponse
@@ -94,41 +98,65 @@ def remover_item(request, item_index):
     return redirect('adicionar_item')
 
 def finalizar_pedido(request):
+    if 'cliente_id' not in request.session:
+        return redirect('criar_pedido')
+    cliente_encontrado = Cliente.objects.get(id=request.session['cliente_id'])
+
     if request.method == 'GET':
-        cliente_encontrado = Cliente.objects.get(id=request.session['cliente_id'])
         if 'itens' not in request.session:
             request.session['itens'] = []
         itens = request.session['itens']
         itens_detalhados = []
         total = 0
         for item in itens:
-            produto_encontrado = Produto.objects.get(id = item['produto_id'])
+            produto_encontrado = Produto.objects.get(id=item['produto_id'])
             subtotal = produto_encontrado.price * item['quantidade']
-            itens_detalhados.append({'produto': produto_encontrado, 'quantidade':item['quantidade'], 'subtotal': subtotal})
+            itens_detalhados.append({'produto': produto_encontrado, 'quantidade': item['quantidade'], 'subtotal': subtotal})
             total += subtotal
+        data_hoje = timezone.localtime().strftime('%Y-%m-%d')
+        return render(
+            request, 
+            'pedidos/finalizar_pedido.html', 
+            {
+             'itens_detalhados': itens_detalhados, 
+             'cliente': cliente_encontrado, 
+             'total': total,
+             'data_hoje': data_hoje,
+            })
+
     if request.method == 'POST':
-        cliente_encontrado = Cliente.objects.get(id=request.session['cliente_id'])
-        if request.POST['boleto'].startswith('S'):
-            boleto_valor = True
-        else:
-            boleto_valor = False
-        pedido_criado = Pedido.objects.create(client = cliente_encontrado, boleto = boleto_valor)
-        for item in request.session['itens']:
+        forma_pagamento = request.POST.get('forma_pagamento', 'DINHEIRO')
+        if forma_pagamento not in ['DINHEIRO', 'CONSIGNADO', 'PIX', 'BOLETO']:
+            if request.POST.get('boleto', '').startswith('S'):
+                forma_pagamento = 'BOLETO'
+            else:
+                forma_pagamento = 'DINHEIRO'
+
+        boleto_valor = (forma_pagamento == 'BOLETO')
+
+        data_pedido_str = request.POST.get('data_pedido')
+        data_criacao = timezone.now()
+        if data_pedido_str:
+            try:
+                dt = datetime.strptime(data_pedido_str, '%Y-%m-%d')
+                agora = timezone.localtime()
+                dt = dt.replace(hour=agora.hour, minute=agora.minute, second=agora.second)
+                data_criacao = timezone.make_aware(dt) if timezone.is_naive(dt) else dt
+            except ValueError:
+                pass
+
+        pedido_criado = Pedido.objects.create(
+            client=cliente_encontrado, 
+            forma_pagamento=forma_pagamento,
+            boleto=boleto_valor,
+            data_criacao=data_criacao
+        )
+        for item in request.session.get('itens', []):
             produto_buscado = Produto.objects.get(id=item['produto_id'])
             ItemPedido.objects.create(pedido=pedido_criado, produto=produto_buscado, quantity=item['quantidade'])
         del request.session['cliente_id']
         del request.session['itens']
         return redirect('pedido_pronto', pedido_id=pedido_criado.id)
-
-
-    return render(
-        request, 
-        'pedidos/finalizar_pedido.html', 
-        {
-         'itens_detalhados': itens_detalhados, 
-         'cliente':cliente_encontrado, 
-         'total': total,
-         })
 
 
 def assinar_pedido(request, pedido_id):
@@ -192,12 +220,117 @@ def gerar_pdf(request, pedido_id):
 
 def ultimos_pedidos(request):
     busca = request.GET.get('busca', '').strip()
-    pedidos = Pedido.objects.select_related('client').prefetch_related('itempedido_set__produto').order_by('-id')
+    pagamento = request.GET.get('pagamento', 'TODOS').upper()
+
+    pedidos = Pedido.objects.select_related('client').prefetch_related('itempedido_set__produto').order_by('-data_criacao', '-id')
+
     if busca:
         pedidos = pedidos.filter(client__name__icontains=busca)
-    else:
-        pedidos = pedidos[:30]
-    return render(request, 'pedidos/ultimos_pedidos.html', {'pedidos': pedidos, 'busca': busca})
+
+    if pagamento in ['DINHEIRO', 'CONSIGNADO', 'PIX', 'BOLETO']:
+        pedidos = pedidos.filter(forma_pagamento=pagamento)
+    elif pagamento == 'BOLETO_PENDENTE':
+        pedidos = pedidos.filter(forma_pagamento='BOLETO').filter(Q(boleto_arquivo__isnull=True) | Q(boleto_arquivo=''))
+    elif pagamento == 'BOLETO_ANEXADO':
+        pedidos = pedidos.filter(forma_pagamento='BOLETO').exclude(Q(boleto_arquivo__isnull=True) | Q(boleto_arquivo=''))
+
+    # Paginação com 10 pedidos por página
+    paginator = Paginator(pedidos, 10)
+    page_number = request.GET.get('page', 1)
+    pedidos_page = paginator.get_page(page_number)
+
+    return render(request, 'pedidos/ultimos_pedidos.html', {
+        'pedidos': pedidos_page,
+        'busca': busca,
+        'pagamento': pagamento,
+    })
+
+def anexar_boleto(request, pedido_id):
+    pedido = get_object_or_404(Pedido.objects.select_related('client'), id=pedido_id)
+
+    if request.method == 'POST':
+        if 'remover_boleto' in request.POST:
+            if pedido.boleto_arquivo:
+                pedido.boleto_arquivo.delete(save=False)
+                pedido.boleto_arquivo = None
+                pedido.save()
+            return redirect('ultimos_pedidos')
+
+        if 'boleto_arquivo' in request.FILES:
+            pedido.boleto_arquivo = request.FILES['boleto_arquivo']
+            pedido.forma_pagamento = 'BOLETO'
+            pedido.boleto = True
+            pedido.save()
+            return redirect('ultimos_pedidos')
+
+    return render(request, 'pedidos/anexar_boleto.html', {'pedido': pedido})
+
+def editar_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido.objects.select_related('client'), id=pedido_id)
+    produtos = Produto.objects.all()
+
+    if request.method == 'POST':
+        # 1. Atualizar forma de pagamento
+        forma_pagamento = request.POST.get('forma_pagamento')
+        if forma_pagamento in ['DINHEIRO', 'CONSIGNADO', 'PIX', 'BOLETO']:
+            pedido.forma_pagamento = forma_pagamento
+            pedido.boleto = (forma_pagamento == 'BOLETO')
+
+        # 2. Atualizar data de criação
+        data_input = request.POST.get('data_criacao')
+        if data_input:
+            try:
+                if 'T' in data_input:
+                    dt = datetime.strptime(data_input, '%Y-%m-%dT%H:%M')
+                else:
+                    dt = datetime.strptime(data_input, '%Y-%m-%d')
+                pedido.data_criacao = timezone.make_aware(dt) if timezone.is_naive(dt) else dt
+            except ValueError:
+                pass
+
+        pedido.save()
+
+        # 3. Adicionar novo item se preenchido
+        novo_produto_id = request.POST.get('novo_produto_id')
+        nova_quantidade = request.POST.get('nova_quantidade')
+        if novo_produto_id and nova_quantidade:
+            qtd = int(nova_quantidade)
+            if qtd > 0:
+                prod = Produto.objects.get(id=novo_produto_id)
+                item_existente = ItemPedido.objects.filter(pedido=pedido, produto=prod).first()
+                if item_existente:
+                    item_existente.quantity += qtd
+                    item_existente.save()
+                else:
+                    ItemPedido.objects.create(pedido=pedido, produto=prod, quantity=qtd)
+
+        return redirect('editar_pedido', pedido_id=pedido.id)
+
+    itens = ItemPedido.objects.filter(pedido=pedido).select_related('produto')
+    itens_detalhados = []
+    total = 0
+    for item in itens:
+        subtotal = item.produto.price * item.quantity
+        itens_detalhados.append({
+            'item': item,
+            'subtotal': subtotal
+        })
+        total += subtotal
+
+    data_formatada = timezone.localtime(pedido.data_criacao).strftime('%Y-%m-%dT%H:%M')
+
+    return render(request, 'pedidos/editar_pedido.html', {
+        'pedido': pedido,
+        'produtos': produtos,
+        'itens_detalhados': itens_detalhados,
+        'total': total,
+        'data_formatada': data_formatada,
+    })
+
+def remover_item_pedido(request, pedido_id, item_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    ItemPedido.objects.filter(id=item_id, pedido=pedido).delete()
+    return redirect('editar_pedido', pedido_id=pedido.id)
 
 def excluir_pedido(request, pedido_id):
     Pedido.objects.filter(id=pedido_id).delete()

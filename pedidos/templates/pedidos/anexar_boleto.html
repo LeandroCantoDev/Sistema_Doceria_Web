@@ -1,0 +1,46 @@
+{% extends 'pedidos/base.html' %}
+{% block content %}
+
+<h1>Anexar Boleto Bancário</h1>
+<p style="color: #666; margin-top: -10px;">Pedido #{{ pedido.id }} - Cliente: <strong>{{ pedido.client.name }}</strong></p>
+
+<div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 20px;">
+    <p style="margin: 4px 0;"><strong>Valor Total:</strong> <span style="color: var(--laranja); font-weight: bold;">R$ {{ pedido.total|floatformat:2 }}</span></p>
+    <p style="margin: 4px 0;"><strong>Data do Pedido:</strong> {{ pedido.data_criacao|date:"d/m/Y H:i" }}</p>
+    
+    {% if pedido.boleto_arquivo %}
+        <div style="margin-top: 15px; padding: 12px; background-color: #E1F5FE; border-radius: 6px; border-left: 4px solid #0277BD;">
+            <p style="margin: 0 0 8px 0; color: #0277BD; font-weight: bold;">✓ Já existe um boleto anexado para este pedido:</p>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <a href="{{ pedido.boleto_arquivo.url }}" target="_blank" class="btn" style="background-color: #0277BD;">📄 Abrir / Imprimir Boleto Atual</a>
+                <form method="POST" style="display: inline; margin: 0; padding: 0; box-shadow: none; background: transparent;">
+                    {% csrf_token %}
+                    <button type="submit" name="remover_boleto" value="1" class="btn-danger" onclick="return confirm('Deseja realmente remover o arquivo deste boleto?');">🗑️ Remover Boleto</button>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <p style="margin-top: 10px; color: #E65100; font-weight: bold;">⚠️ Nenhum arquivo de boleto foi anexado ainda.</p>
+    {% endif %}
+</div>
+
+<form method="POST" enctype="multipart/form-data" style="flex-direction: column; align-items: stretch; gap: 14px;">
+    {% csrf_token %}
+    <label style="font-weight: bold; color: var(--marrom-cafe);">
+        {% if pedido.boleto_arquivo %}
+            Selecione um novo arquivo para substituir o boleto:
+        {% else %}
+            Selecione o arquivo do boleto (PDF ou imagem):
+        {% endif %}
+    </label>
+    
+    <input type="file" name="boleto_arquivo" accept=".pdf,image/*" required style="padding: 10px; background: #FFF8F0; border: 2px dashed var(--marrom-cafe);">
+    <small style="color: #666;">Você pode enviar em formato PDF ou foto/imagem do boleto gerado no banco.</small>
+
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <a href="{% url 'ultimos_pedidos' %}" class="btn btn-secondary" style="flex: 1; justify-content: center;">Voltar</a>
+        <button type="submit" class="btn-success" style="flex: 2; justify-content: center;">📤 Enviar Boleto para o Sistema</button>
+    </div>
+</form>
+
+{% endblock %}

@@ -10,7 +10,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-%a1tg1n(((^5w(nze9a*0
 
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['leandrocanto.pythonanywhere.com']
+ALLOWED_HOSTS = ['leandrocanto.pythonanywhere.com', '127.0.0.1', 'localhost', '*']
 
 
 
@@ -98,6 +98,9 @@ STATICFILES_DIRS = [
     BASE_DIR / 'pedidos' / 'static',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 
 

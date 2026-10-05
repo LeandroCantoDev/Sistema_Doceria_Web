@@ -17,6 +17,9 @@ urlpatterns = [
     path('gerar-pdf/<int:pedido_id>/', views.gerar_pdf, name='gerar_pdf'),
     path('ultimos-pedidos/', views.ultimos_pedidos, name='ultimos_pedidos'),
     path('excluir-pedido/<int:pedido_id>/', views.excluir_pedido, name='excluir_pedido'),
+    path('anexar-boleto/<int:pedido_id>/', views.anexar_boleto, name='anexar_boleto'),
+    path('editar-pedido/<int:pedido_id>/', views.editar_pedido, name='editar_pedido'),
+    path('editar-pedido/<int:pedido_id>/remover-item/<int:item_id>/', views.remover_item_pedido, name='remover_item_pedido'),
 ]
 
 
