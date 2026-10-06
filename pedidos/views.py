@@ -215,7 +215,11 @@ def gerar_pdf(request, pedido_id):
     template = get_template('pedidos/pdf_pedidos.html')
     html = template.render({'pedido': pedido_encontrado, 'itens_detalhados': itens_detalhados, 'total': total})
     response = HttpResponse(content_type='application/pdf')
-    pisa.CreatePDF(html, dest=response)
+    nome_arquivo = f'pedido_{pedido_encontrado.id}_{pedido_encontrado.client.name.replace(" ", "_")}.pdf'
+    response['Content-Disposition'] = f'inline; filename="{nome_arquivo}"'
+    pisa_status = pisa.CreatePDF(html, dest=response, encoding='utf-8')
+    if pisa_status.err:
+        return HttpResponse('Erro ao gerar PDF', status=500)
     return response
 
 def ultimos_pedidos(request):

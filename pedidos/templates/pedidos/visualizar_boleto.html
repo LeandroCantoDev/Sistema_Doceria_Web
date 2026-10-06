@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boleto - Pedido #{{ pedido.id }} | Doce Sabor</title>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { margin: 0; padding: 0; }
+            .boleto-container { width: 100%; height: 100vh; }
+            iframe { width: 100%; height: 100vh; border: none; }
+            img.boleto-img { width: 100%; height: auto; }
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Barra de ações - não imprime */
+        .barra-acoes {
+            background-color: #3E2723;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .barra-acoes .info {
+            font-size: 0.95em;
+        }
+
+        .barra-acoes .info strong {
+            font-size: 1.05em;
+            color: #FFCC80;
+        }
+
+        .barra-acoes .info span {
+            color: #D7CCC8;
+            font-size: 0.85em;
+        }
+
+        .btn-imprimir {
+            background-color: #D97B29;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-imprimir:hover {
+            background-color: #B8611F;
+        }
+
+        .btn-voltar {
+            background-color: #5D4037;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-voltar:hover {
+            background-color: #3E2723;
+        }
+
+        /* Área do boleto - A4 */
+        .boleto-wrapper {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            min-height: calc(100vh - 70px);
+        }
+
+        .boleto-container {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        iframe.boleto-pdf {
+            width: 210mm;
+            height: 297mm;
+            border: none;
+        }
+
+        img.boleto-img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Barra de ações (não imprime) -->
+    <div class="barra-acoes no-print">
+        <div class="info">
+            <strong>📄 Boleto — Pedido #{{ pedido.id }}</strong><br>
+            <span>Cliente: {{ pedido.client.name }} &nbsp;|&nbsp; Total: R$ {{ pedido.total|floatformat:2 }} &nbsp;|&nbsp; {{ pedido.data_criacao|date:"d/m/Y" }}</span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <a href="{% url 'ultimos_pedidos' %}" class="btn-voltar">← Voltar</a>
+            <button onclick="window.print()" class="btn-imprimir">🖨️ Imprimir Boleto (A4)</button>
+        </div>
+    </div>
+
+    <!-- Área de visualização A4 -->
+    <div class="boleto-wrapper">
+        <div class="boleto-container">
+            {% if is_pdf %}
+                <iframe class="boleto-pdf" src="{{ pedido.boleto_arquivo.url }}" title="Boleto PDF"></iframe>
+            {% else %}
+                <img class="boleto-img" src="{{ pedido.boleto_arquivo.url }}" alt="Boleto bancário">
+            {% endif %}
+        </div>
+    </div>
+
+</body>
+</html>

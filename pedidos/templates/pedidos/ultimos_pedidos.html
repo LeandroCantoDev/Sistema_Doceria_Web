@@ -75,11 +75,23 @@
 
             {% if pedido.boleto %}
                 {% if pedido.boleto_arquivo %}
-                    <a href="{{ pedido.boleto_arquivo.url }}" target="_blank" class="btn" style="background-color: #0277BD;" title="Abrir e imprimir boleto enviado pelo irmão">📄 Imprimir Boleto</a>
-                    <a href="{% url 'anexar_boleto' pedido.id %}" class="btn-secondary" style="font-size: 0.8em; padding: 6px 10px;" title="Substituir boleto">🔄 Trocar</a>
+                    <a href="{{ pedido.boleto_arquivo.url }}" target="_blank" class="btn" style="background-color: #0277BD;" title="Abrir e imprimir boleto">📄 Imprimir Boleto</a>
+                    <button type="button" class="btn btn-secondary" style="font-size: 0.8em; padding: 6px 10px;" title="Substituir boleto" onclick="toggleUpload('upload-{{ pedido.id }}')">🔄 Trocar</button>
                 {% else %}
-                    <a href="{% url 'anexar_boleto' pedido.id %}" class="btn" style="background-color: #E65100;" title="Enviar o arquivo do boleto bancário">📎 Enviar Boleto</a>
+                    <button type="button" class="btn" style="background-color: #E65100;" title="Enviar o arquivo do boleto bancário" onclick="toggleUpload('upload-{{ pedido.id }}')">📎 Enviar Boleto</button>
                 {% endif %}
+                <!-- Upload inline -->
+                <div id="upload-{{ pedido.id }}" style="display:none; width: 100%; margin-top: 6px; padding: 10px; background: #FFF8F0; border: 2px dashed #D97B29; border-radius: 6px;">
+                    <form method="POST" enctype="multipart/form-data" action="{% url 'anexar_boleto' pedido.id %}" style="display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; box-shadow: none; background: transparent;">
+                        {% csrf_token %}
+                        <label style="font-size: 0.85em; font-weight: bold; color: #3E2723;">Selecione o arquivo do boleto (PDF ou imagem):</label>
+                        <input type="file" name="boleto_arquivo" accept=".pdf,image/*" required style="padding: 6px; background: white; border: 1px solid #D97B29; border-radius: 4px; margin-bottom: 0;">
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" onclick="toggleUpload('upload-{{ pedido.id }}')" class="btn btn-secondary" style="flex: 1; justify-content: center; font-size: 0.8em;">✕ Cancelar</button>
+                            <button type="submit" class="btn" style="flex: 2; justify-content: center; background-color: #2E7D32; font-size: 0.8em;">📤 Enviar</button>
+                        </div>
+                    </form>
+                </div>
             {% endif %}
 
             <a href="{% url 'editar_pedido' pedido.id %}" class="btn-secondary" title="Alterar itens, data ou pagamento">✏️ Editar</a>
@@ -122,5 +134,14 @@
     <a href="{% url 'home' %}" class="btn btn-secondary">← Voltar ao Início</a>
     <a href="{% url 'criar_pedido' %}" class="btn">+ Novo Pedido</a>
 </div>
+
+<script>
+function toggleUpload(id) {
+    var el = document.getElementById(id);
+    if (el) {
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+}
+</script>
 
 {% endblock %}
